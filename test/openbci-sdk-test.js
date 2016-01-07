@@ -6,7 +6,7 @@ var chai = require('chai'),
     OpenBCISample = openBCIBoard.OpenBCISample;
 
 var fs = require('fs');
-//var wstream = fs.createWriteStream('myOutput.txt');
+var wstream = fs.createWriteStream('myOutput.txt');
 
 
 describe('openbci-sdk',function() {
@@ -34,6 +34,56 @@ describe('openbci-sdk',function() {
                                 ourBoard.on('sample',function(sample) {
                                     //wstream.write('Master Count: ' + sample._count + ' Sample Count: ' + sample.sampleNumber + '\n');
                                     //console.log('Master Count: ' + sample._count + ' Sample Count: ' + sample.sampleNumber);
+                                    OpenBCISample.debugPrettyPrint(sample);
+                                });
+                            });
+                        });
+                    }
+                }).catch(function(err) {
+                    console.log('Error [setup]: ' + err);
+                    done();
+                });
+                setTimeout(function() {
+                    ourBoard.disconnect().then(function(msg) {
+                        running = true;
+                        setTimeout(function(){
+                            done();
+                        },50);
+                    }, function(err) {
+                        console.log('Error: ' + err);
+                        done();
+                    });
+                },9000);
+            });
+            it('should stop the simulator after 5 seconds', function() {
+                expect(running).equals(true);
+            });
+        });
+        describe('#imdenceCheck', function() {
+            var running = false;
+            beforeEach(function(done) {
+                var ourBoard = new openBCIBoard.OpenBCIBoard({
+                    verbose: true
+                });
+
+                ourBoard.autoFindOpenBCIBoard().then((value) => {
+                    if(Array.isArray(value)) {
+                        /**Unable to auto find OpenBCI board*/
+                        console.log('NO BOARD CONNECTED!, AUTO PASSING TEST!');
+                        running = true;
+                        done();
+                    } else {
+                        return ourBoard.connect(value).then(function() {
+                            console.log('board connected on path: ' + value);
+                            ourBoard.on('ready',function() {
+                                console.log('Ready to start streaming!');
+                                ourBoard.streamStart();
+                                //ourBoard.impedanceTestStart().then(() => {},(err) => {
+                                //    console.log(err);
+                                //});
+                                ourBoard.on('sample',function(sample) {
+                                    wstream.write(' Sample Count: ' + sample.sampleNumber + ' impedance: ' + JSON.stringify(sample.impedanceArray) + '\n');
+                                    console.log(' Sample Count: ' + sample.sampleNumber + ' impedance: ' + JSON.stringify(sample.impedanceArray));
                                     //OpenBCISample.debugPrettyPrint(sample);
                                 });
                             });

@@ -49,6 +49,7 @@ function OpenBCIFactory() {
         // Arrays
         this.writeOutArray = new Array(50);
         // Bools
+        this.isCalculatingImpedance = false;
         this.isLookingForKeyInBuffer = true;
         this.isSimulating = false;
         // Buffers
@@ -339,6 +340,61 @@ function OpenBCIFactory() {
     };
 
     /**
+     * Purpose: To apply test signals to the channels on the OpenBCI board used to test for impedance.
+     * @returns {Promise} - If the test was able to be started
+     * Author: AJ Keller (@pushtheworldllc)
+     */
+    OpenBCIBoard.prototype.impedanceTestStart = function() {
+        return new Promise((resolve, reject) => {
+            if(!this.connected) reject('Must be connected');
+            if(this.isCalculatingImpedance) reject('Already calculating impedance\'s');
+
+            this.isCalculatingImpedance = true;
+
+            if(this.options.daisy) {
+                // TODO: Do something different for daisy probably, just saying
+            } else {
+                // Apply test signals
+                for(var i = 1; i <= k.OBCINumberOfChannelsDefault; i++) {
+                    k.getImpedanceSetter(i,true,true).then((commandsArray) => {
+                        // Good thing we wrote the write array to stack commands :D (*wipes dirt off shoulder*)
+                        this.write(commandsArray);
+                    });
+                }
+                resolve();
+            }
+        });
+    };
+
+    /**
+     * Purpose: To stop calculating impedance's for the board.
+     * @returns {Promise}
+     * Author: AJ Keller (@pushtheworldllc)
+     */
+    OpenBCIBoard.prototype.impedanceTestStop = function() {
+        return new Promise((resolve, reject) => {
+            if(!this.connected) reject('Must be connected');
+            if(!this.isCalculatingImpedance) reject('Not calculating impedance\'s to begin with');
+
+            this.isCalculatingImpedance = false;
+
+            if(this.options.daisy) {
+                // TODO: Do something different for daisy probably, just saying
+            } else {
+                // Apply test signals
+                for(var i = 1; i <= k.OBCINumberOfChannelsDefault; i++) {
+                    k.getImpedanceSetter(i,false,false).then((commandsArray) => {
+                        // Good thing we wrote the write array to stack commands :D (*wipes dirt off shoulder*)
+                        this.write(commandsArray);
+                    });
+                }
+                resolve();
+            }
+        });
+    };
+
+
+    /**
      * Purpose: To start simulating an open bci board
      * Note: Must be called after the constructor
      * @returns {Promise}
@@ -468,8 +524,21 @@ function OpenBCIFactory() {
                 var newSample = OpenBCISample.convertPacketToSample(rawPacket);
                 if(newSample) {
 
+
+
                     newSample._count = self.sampleCount++;
-                    self.emit('sample', newSample);
+
+
+                    if(self.isCalculatingImpedance) {
+                        OpenBCISample.impedanceCalculation(newSample).then((updatedSampleObject) => {
+                            self.emit('sample', updatedSampleObject);
+                        }, (err) => {
+                            self.emit('sample', newSample);
+                            console.log('Error [impedanceCalculation]: ' + err);
+                        });
+                    } else {
+                        self.emit('sample', newSample);
+                    }
 
                 } else {
                     console.log('Bad Packet: ' + self.badPackets);

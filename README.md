@@ -346,13 +346,17 @@ ourBoard.write('o');
 
 ## Events
 
-### .on('ready', callback)
-
-### .on('sample', callback)
-
 ### .on('query', callback)
 
 Emitted resulting in a call to `.getChannelSettings()` with the channelSettingsObject
+
+### .on('ready', callback)
+
+Emitted when the board is in a ready to start streaming state.
+
+### .on('sample', callback)
+
+Emitted when there is a new sample available. 
 
 ## Dev Notes
 Running

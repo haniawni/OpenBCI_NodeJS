@@ -649,6 +649,7 @@ function impedanceSetter(channelNumber,pInputApplied,nInputApplied) {
         commandChannelForCmd(channelNumber).then(command => {
             var outputArray = [
                 kOBCIChannelImpedanceSet,
+                command,
                 cmdNInputApplied,
                 cmdPInputApplied,
                 kOBCIChannelImpedanceLatch
