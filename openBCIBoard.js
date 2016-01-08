@@ -47,7 +47,7 @@ function OpenBCIFactory() {
 
         /** Properties (keep alphabetical) */
         // Arrays
-        this.writeOutArray = new Array(50);
+        this.writeOutArray = new Array(100);
         // Bools
         this.isCalculatingImpedance = false;
         this.isLookingForKeyInBuffer = true;
@@ -66,12 +66,7 @@ function OpenBCIFactory() {
         // Objects
         this.writer = null;
         // Numbers
-        this.badPackets = 0;
-        this.bytesIn = 0;
-        this.commandsToWrite = 0;
-        this.sampleCount = 0;
         // Strings
-        //self.portName = portName;
 
         //TODO: Add connect immediately functionality, suggest this to be the default...
     }

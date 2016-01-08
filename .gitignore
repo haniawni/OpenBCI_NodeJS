@@ -30,3 +30,6 @@ node_modules
 .idea
 .DS_Store
 public
+
+# Test output files
+myOutput.txt
