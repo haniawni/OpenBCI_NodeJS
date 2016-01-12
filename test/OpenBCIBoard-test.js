@@ -51,7 +51,7 @@ describe('OpenBCIBoard',function() {
         it('should write the buffer to the empty master buffer', function() {
             var self = sampleSelf();
             // console.log(sampleData[0]);
-            bciBoard._bufMerger(self, sampleData[0]);
+            bciBoard._bufMerger(sampleData[0]);
 
             // test to see if buffers match
             assert.equal(0,sampleData[0].compare(self.masterBuffer.buffer.slice(0, k.OBCIPacketSize)));
@@ -68,7 +68,7 @@ describe('OpenBCIBoard',function() {
             var tinyBufferSize = 10; //tiny because its smaller than a packet
             var tinyBuffer = sampleData[0].slice(0,tinyBufferSize);
 
-            bciBoard._bufMerger(self, tinyBuffer);
+            bciBoard._bufMerger(tinyBuffer);
 
             // test to see if buffers match
             assert.equal(0,tinyBuffer.compare(self.masterBuffer.buffer.slice(0, tinyBufferSize)));
@@ -90,7 +90,7 @@ describe('OpenBCIBoard',function() {
 
             var multiPacketBuffer = Buffer.concat(buffers,totalLength);
 
-            bciBoard._bufMerger(self, multiPacketBuffer);
+            bciBoard._bufMerger(multiPacketBuffer);
 
             // test to see if buffers match
             assert.equal(0,multiPacketBuffer.compare(self.masterBuffer.buffer.slice(0, totalLength)));
@@ -117,7 +117,7 @@ describe('OpenBCIBoard',function() {
 
             var multiPacketBuffer = Buffer.concat(buffers,totalLength);
 
-            bciBoard._bufMerger(self, multiPacketBuffer);
+            bciBoard._bufMerger(multiPacketBuffer);
 
             // test to see if buffers match
             assert.equal(0,multiPacketBuffer.compare(self.masterBuffer.buffer.slice(0, totalLength)));
@@ -133,7 +133,7 @@ describe('OpenBCIBoard',function() {
             var originalWritePosition = 69;
             self.masterBuffer.positionWrite = originalWritePosition;
 
-            bciBoard._bufMerger(self, sampleData[0]);
+            bciBoard._bufMerger(sampleData[0]);
 
             // test to see if the master buffer contains the correct data
             assert.equal(0,sampleData[0].compare(self.masterBuffer.buffer.slice(originalWritePosition, originalWritePosition + k.OBCIPacketSize)));
@@ -151,7 +151,7 @@ describe('OpenBCIBoard',function() {
 
             self.masterBuffer.positionWrite = originalWritePosition;
 
-            bciBoard._bufMerger(self, sampleData[0]);
+            bciBoard._bufMerger(sampleData[0]);
 
             // test to see that the end of master buffer contains half of sample
             assert.equal(0,sampleData[0].slice(0,spaceRemaingInMasterBuffer).compare(self.masterBuffer.buffer.slice(originalWritePosition)));
@@ -177,7 +177,7 @@ describe('OpenBCIBoard',function() {
             //console.log(multiPacketBuffer);
 
 
-            bciBoard._bufMerger(self,multiPacketBuffer);
+            bciBoard._bufMerger(multiPacketBuffer);
 
             // run through three iterations of stripping packets
             for (var i = 0; i < 3; i++) {
@@ -199,7 +199,7 @@ describe('OpenBCIBoard',function() {
 
             var multiPacketBuffer = Buffer.concat(buffers,totalLength);
 
-            bciBoard._bufMerger(self,multiPacketBuffer);
+            bciBoard._bufMerger(multiPacketBuffer);
 
             // run through three iterations of stripping packets
             for (var i = 0; i < 3; i++) {

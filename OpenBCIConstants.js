@@ -331,45 +331,6 @@ module.exports = {
                     break;
             }
         });
-        switch (channelNumber) {
-            case 1:
-                return kOBCIChannelOn_1;
-            case 2:
-                return kOBCIChannelOn_2;
-            case 3:
-                return kOBCIChannelOn_3;
-            case 4:
-                return kOBCIChannelOn_4;
-            case 5:
-                return kOBCIChannelOn_5;
-            case 6:
-                return kOBCIChannelOn_6;
-            case 7:
-                return kOBCIChannelOn_7;
-            case 8:
-                return kOBCIChannelOn_8;
-            case 9:
-                return kOBCIChannelOn_9;
-            case 10:
-                return kOBCIChannelOn_10;
-            case 11:
-                return kOBCIChannelOn_11;
-            case 12:
-                return kOBCIChannelOn_12;
-            case 13:
-                return kOBCIChannelOn_13;
-            case 14:
-                return kOBCIChannelOn_14;
-            case 15:
-                return kOBCIChannelOn_15;
-            case 16:
-                return kOBCIChannelOn_16;
-            default:
-                if(callback) {
-                    callback()
-                }
-                return;
-        }
     },
     /** Test Signal Control Commands */
     OBCITestSignalConnectToDC:kOBCITestSignalConnectToDC,
