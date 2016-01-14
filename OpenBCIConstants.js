@@ -178,6 +178,9 @@ const kOBCIMasterBufferSize = kOBCIPacketSize * 100;
 /** Impedance Calculation Variables */
 const kOBCILeadOffDriveInAmps = 0.000000006;
 
+/** Command send delay */
+const kOBCIWriteIntervalDelayMS = 10;
+
 module.exports = {
     /** Turning channels off */
     OBCIChannelOff_1:kOBCIChannelOff_1,
@@ -497,7 +500,9 @@ module.exports = {
     /** Channel Setter Maker */
     getChannelSetter:channelSetter,
     /** Impedance Setter Maker */
-    getImpedanceSetter:impedanceSetter
+    getImpedanceSetter:impedanceSetter,
+    /** Command send delay */
+    OBCIWriteIntervalDelayMS:kOBCIWriteIntervalDelayMS
 };
 
 /**
@@ -615,7 +620,7 @@ function impedanceSetter(channelNumber,pInputApplied,nInputApplied) {
                 cmdPInputApplied,
                 kOBCIChannelImpedanceLatch
             ];
-            console.log(outputArray);
+            //console.log(outputArray);
             resolve(outputArray);
         });
     });

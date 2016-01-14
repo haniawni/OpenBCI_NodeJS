@@ -1,11 +1,11 @@
 'use strict';
 
-var k = require('./OpenBCIConstants');
-var OpenBCISample = require('./OpenBCISample');
-var serialPort = require('serialport');
 var EventEmitter = require('events').EventEmitter;
 var util = require('util');
 var stream = require('stream');
+var serialPort = require('serialport');
+var k = require('./OpenBCIConstants');
+var OpenBCISample = require('./OpenBCISample');
 
 function OpenBCIFactory() {
     var factory = this;
@@ -65,6 +65,7 @@ function OpenBCIFactory() {
         // Objects
         this.writer = null;
         // Numbers
+        this.commandsToWrite = 0;
         // Strings
 
         //TODO: Add connect immediately functionality, suggest this to be the default...
@@ -97,7 +98,7 @@ function OpenBCIFactory() {
 
             //console.log('0');
             boardSerial.on('data',(data) => {
-                this._processBytes(data).bind(this);
+                this._processBytes(data);
             });
             this.connected = true;
 
@@ -176,6 +177,7 @@ function OpenBCIFactory() {
         return this.write(k.OBCIStreamStop);
     };
 
+    // TODO: Write unit test for .write() function
     /**
      * Purpose: To be able to easily write to the board but ensure that we never send a commands
      *              with less than a 10ms spacing between sends. This uses an array and pops off
@@ -194,14 +196,16 @@ function OpenBCIFactory() {
                     this.writer = null;
                     //console.log('Finished writing, this.writer now null');
                 } else {
-                    this.writer = setTimeout(writerFunction,10);
+                    this.writer = setTimeout(writerFunction,k.OBCIWriteIntervalDelayMS);
                 }
-
+                if(this.options.verbose) console.log('Sending ' + command + ' to board!');
                 writeAndDrain.call(this,command).then(() => {
-                    if(this.options.verbose) console.log('write success');
+                    //if(this.options.verbose) console.log('write success');
                 },(err) => {
                     if(this.options.verbose) console.log('write failure: ' + err);
                 });
+            } else {
+                if(this.options.verbose) console.log('Big problem! Writer started with no commands to write');
             }
         };
 
@@ -219,12 +223,13 @@ function OpenBCIFactory() {
                     }
                 } else {
                     //console.log('not array');
+                    console.log('Adding ' + dataToWrite + ' to the write queue');
                     this.writeOutArray[this.commandsToWrite] = dataToWrite;
                     this.commandsToWrite++;
                 }
                 if(this.writer === null || this.writer === undefined) { //there is no writer started
-                    //console.log('starting writer');
-                    this.writer = setTimeout(writerFunction,0);
+                    console.log('starting writer');
+                    this.writer = setTimeout(writerFunction,k.OBCIWriteIntervalDelayMS);
                 }
                 resolve();
             }
@@ -329,42 +334,49 @@ function OpenBCIFactory() {
 
     /**
      * Purpose: To apply test signals to the channels on the OpenBCI board used to test for impedance.
-     * @returns {Promise} - If the test was able to be started
+     * @returns {Promise} - Fulfilled once all the test commands are sent to the board.
      * Author: AJ Keller (@pushtheworldllc)
      */
-    OpenBCIBoard.prototype.impedanceTestStart = function() {
+    OpenBCIBoard.prototype.impedanceTestStartAll = function() {
         return new Promise((resolve, reject) => {
             if(!this.connected) reject('Must be connected');
-            if(this.isCalculatingImpedance) reject('Already calculating impedance\'s');
 
-            this.isCalculatingImpedance = true;
+            //console.log('is going to start calculating');
 
             if(this.options.daisy) {
                 // TODO: Do something different for daisy probably, just saying
+                reject('Not setup to measure impedance on daisy board.')
             } else {
+                if (this.verbose) console.log('Sending impedance start commands!');
+
+                var delayInMS = 0;
                 // Apply test signals
                 for(var i = 1; i <= k.OBCINumberOfChannelsDefault; i++) {
                     k.getImpedanceSetter(i,true,true).then((commandsArray) => {
                         // Good thing we wrote the write array to stack commands :D (*wipes dirt off shoulder*)
                         this.write(commandsArray);
+                        delayInMS += commandsArray.length * k.OBCIWriteIntervalDelayMS;
                     });
                 }
-                resolve();
+                delayInMS += this.commandsToWrite * k.OBCIWriteIntervalDelayMS; // Account for commands waiting to be sent in the write buffer
+                setTimeout(() => {
+                    resolve();
+                    this.impedanceTestCalculatingStart();
+                }, delayInMS); // Prevents emitting .impedanceArray before all setting commands have been applied
             }
         });
     };
 
     /**
      * Purpose: To stop calculating impedance's for the board.
-     * @returns {Promise}
+     * @returns {Promise} - Fulfilled once all the test commands are sent to the board.
      * Author: AJ Keller (@pushtheworldllc)
      */
-    OpenBCIBoard.prototype.impedanceTestStop = function() {
+    OpenBCIBoard.prototype.impedanceTestStopAll = function() {
         return new Promise((resolve, reject) => {
             if(!this.connected) reject('Must be connected');
-            if(!this.isCalculatingImpedance) reject('Not calculating impedance\'s to begin with');
 
-            this.isCalculatingImpedance = false;
+            this.impedanceTestCalculatingStop();
 
             if(this.options.daisy) {
                 // TODO: Do something different for daisy probably, just saying
@@ -381,6 +393,69 @@ function OpenBCIFactory() {
         });
     };
 
+    /**
+     * Purpose: To apply the impedance test signal to an input for any given channel
+     * @param channelNumber -  Number - The channel you want to test
+     * @param pInput - BOOL - True if you want to apply the test signal to the P input, false to not apply the test signal.
+     * @param nInput - BOOL - True if you want to apply the test signal to the N input, false to not apply the test signal.
+     * @returns {Promise}
+     */
+    OpenBCIBoard.prototype.impedanceTestStartChannel = function(channelNumber,pInput,nInput) {
+        return new Promise((resolve,reject) => {
+            if(!this.connected) reject('Must be connected');
+
+            var delayInMS = 0;
+
+            k.getImpedanceSetter(channelNumber,pInput,nInput).then((commandsArray) => {
+                this.write(commandsArray);
+                delayInMS += commandsArray.length * k.OBCIWriteIntervalDelayMS;
+            }, (err) => {
+                reject(err);
+            });
+            delayInMS += this.commandsToWrite * k.OBCIWriteIntervalDelayMS; // Account for commands waiting to be sent in the write buffer
+            setTimeout(() => {
+                if(!this.isCalculatingImpedance) this.impedanceTestCalculatingStart();
+                resolve();
+            }, delayInMS); // Prevents emitting .impedanceArray before all setting commands have been applied
+
+        });
+    };
+
+    /**
+     * Purpose: To stop applying test signals for a given channel number.
+     * Note: Call .impedanceTestCalculatingStop() when finished applying your test signals.
+     * @param channelNumber
+     * @returns {Promise} - Fulfilled when all commands are send to the board, rejects on error.
+     * Author: AJ Keller (@pushtheworldllc)
+     */
+    OpenBCIBoard.prototype.impedanceTestStopChannel = function(channelNumber) {
+        return new Promise((resolve,reject) => {
+            if(!this.connected) reject('Must be connected');
+
+            k.getImpedanceSetter(channelNumber,false,false).then((commandsArray) => {
+                this.write(commandsArray);
+                resolve();
+            }, (err) => {
+                reject(err);
+            });
+        });
+    };
+
+    /**
+     * Purpose: To start calculating impedance's every time there is a new sample.
+     * Author: AJ Keller (@pushtheworldllc)
+     */
+    OpenBCIBoard.prototype.impedanceTestCalculatingStart = function() {
+        this.isCalculatingImpedance = true;
+    };
+
+    /**
+     * Purpose: To stop calculating impedance's every time there is a new sample.
+     * Author: AJ Keller (@pushtheworldllc)
+     */
+    OpenBCIBoard.prototype.impedanceTestCalculatingStop = function() {
+        this.isCalculatingImpedance = false;
+    };
 
     /**
      * Purpose: To start simulating an open bci board
@@ -489,9 +564,9 @@ function OpenBCIFactory() {
                         this.emit('ready');
                     } else {
                         //console.log('Found register... changing search buffer');
-                        getChannelSettingsObj(data.slice(i)).then(function(channelSettingsObject) {
+                        getChannelSettingsObj(data.slice(i)).then((channelSettingsObject) => {
                             this.emit('query',channelSettingsObject);
-                        }, function(err) {
+                        }, (err) => {
                             console.log('Error: ' + err);
                         });
                         this.searchingBuf = this.moneyBuf;
@@ -501,11 +576,11 @@ function OpenBCIFactory() {
             }
         } else { //ready to open the serial fire hose
             // send input data to master buffer
-            this._bufMerger(data).bind(this);
+            this._bufMerger(data);
 
             // parse the master buffer
             while(this.masterBuffer.packetsRead < this.masterBuffer.packetsIn) {
-                var rawPacket = this._bufPacketStripper().bind(this);
+                var rawPacket = this._bufPacketStripper();
                 //console.log(rawPacket);
                 var newSample = OpenBCISample.convertPacketToSample(rawPacket);
                 if(newSample) {

@@ -59,7 +59,7 @@ describe('openbci-sdk',function() {
                 expect(running).equals(true);
             });
         });
-        describe('#imdenceCheck', function() {
+        xdescribe('#imdenceCheck', function() {
             var running = false;
             beforeEach(function(done) {
                 var ourBoard = new openBCIBoard.OpenBCIBoard({
@@ -77,14 +77,34 @@ describe('openbci-sdk',function() {
                             console.log('board connected on path: ' + value);
                             ourBoard.on('ready',function() {
                                 console.log('Ready to start streaming!');
+                                //ourBoard.channelOff(1);
+                                //ourBoard.channelOff(2);
+                                //ourBoard.channelOff(3);
+                                //ourBoard.channelOff(4);
+                                //ourBoard.channelOff(5);
+                                //ourBoard.channelOff(6);
+                                //ourBoard.channelOff(7);
                                 ourBoard.streamStart();
-                                //ourBoard.impedanceTestStart().then(() => {},(err) => {
-                                //    console.log(err);
+                                //ourBoard.on('sample',function(sample) {
+                                //    //wstream.write('Master Count: ' + sample._count + ' Sample Count: ' + sample.sampleNumber + '\n');
+                                //    //console.log('Master Count: ' + sample._count + ' Sample Count: ' + sample.sampleNumber);
+                                //    OpenBCISample.debugPrettyPrint(sample);
                                 //});
+                                setTimeout(() => {
+                                    ourBoard.impedanceTestStartAll().then(() => {
+                                        console.log('good start');
+                                    },(err) => {
+                                        console.log(err);
+                                    });
+                                },50);
                                 ourBoard.on('sample',function(sample) {
-                                    wstream.write(' Sample Count: ' + sample.sampleNumber + ' impedance: ' + JSON.stringify(sample.impedanceArray) + '\n');
-                                    console.log(' Sample Count: ' + sample.sampleNumber + ' impedance: ' + JSON.stringify(sample.impedanceArray));
-                                    //OpenBCISample.debugPrettyPrint(sample);
+                                    //wstream.write(' Sample Count: ' + sample.sampleNumber + ' impedance: ' + JSON.stringify(sample.impedanceArray) + '\n');
+                                    //console.log('Sample!');
+                                    if(sample.impedanceArray) {
+                                        wstream.write('Impedance\'s for channels: 1: ' + sample.impedanceArray[1] + ' 2: ' + sample.impedanceArray[2] + ' 3: ' + sample.impedanceArray[3] + ' 4: ' + sample.impedanceArray[4] + ' 5: ' + sample.impedanceArray[5] + ' 6: ' + sample.impedanceArray[6] + ' 7: ' + sample.impedanceArray[7] + ' 8: ' + sample.impedanceArray[8] + '\n');
+                                        console.log('Impedance: ' + sample.impedanceArray.toString());
+                                        //console.log('Impedance\'s for channels: 1: ' + sample.impedanceArray[1] + ' 2: ' + sample.impedanceArray[2] + ' 3: ' + sample.impedanceArray[3] + ' 4: ' + sample.impedanceArray[4] + ' 5: ' + sample.impedanceArray[5] + ' 6: ' + sample.impedanceArray[6] + ' 7: ' + sample.impedanceArray[7] + ' 8: ' + sample.impedanceArray[8]);
+                                    }
                                 });
                             });
                         });
@@ -93,6 +113,16 @@ describe('openbci-sdk',function() {
                     console.log('Error [setup]: ' + err);
                     done();
                 });
+                setTimeout(() => {
+                    if(ourBoard.isCalculatingImpedance) {
+                        ourBoard.impedanceTestStopAll()
+                            .then(function() {
+                                console.log('Impedance test stopped!');
+                            });
+                    } else {
+                        done();
+                    }
+                },6000);
                 setTimeout(function() {
                     ourBoard.disconnect().then(function(msg) {
                         running = true;
@@ -245,33 +275,34 @@ describe('openbci-sdk',function() {
             expect(running).equals(true);
         });
     });
-    //xdescribe('write with different calls', function() {
+    //describe('write with different calls', function() {
     //    this.timeout(10000);
     //    //var running = false;
     //    var ourBoard = new openBCIBoard.OpenBCIBoard();
+    //    var k = openBCIBoard.OpenBCIConstants;
     //    //console.log(ourBoard.writeAndDrain.toString());
     //    ourBoard.serial = 'taco';
     //    //var sandbox = sinon.sandbox.create();//(ourBoard.writeAndDrain);
-    //    var mock = sinon.mock(ourBoard);
+    //    var mock = sinon.mock(ourBoard.writeAndDrain());
     //    //console.log(JSON.stringify(mock));
     //
-    //    ourBoard.write('1');
-    //    ourBoard.write('2');
+    //    //ourBoard.write('1');
+    //    //ourBoard.write('2');
     //    beforeEach(function(done) {
     //        setTimeout(function() {
     //            done();
-    //        },40);
+    //        },k.OBCIWriteIntervalDelayMS * 3);
     //    });
     //    afterEach(function() {
     //        mock.restore();
     //    });
     //    it('should send command to writeAndDrain three times', function() {
     //        //console.log(JSON.stringify(ourBoard));
-    //        expect(ourBoard.calledThrice);
+    //        expect(mock.calledThrice);
     //        //expect(running).equals(true);
     //    });
     //});
-    //xdescribe('write with array', function() {
+    //describe('write with array', function() {
     //    this.timeout(10000);
     //    var running = false;
     //    var ourBoard = new openBCIBoard.OpenBCIBoard();
