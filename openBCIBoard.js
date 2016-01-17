@@ -4,8 +4,8 @@ var EventEmitter = require('events').EventEmitter;
 var util = require('util');
 var stream = require('stream');
 var serialPort = require('serialport');
-var openBCISample = require('./openBCISample.js');
-var k = openBCISample.k;
+var openBCISample = require(__dirname+ '/../node_modules/openbci-sdk/OpenBCISample');
+var k = require(__dirname+ '/../node_modules/openbci-sdk/OpenBCIConstants');
 
 function OpenBCIFactory() {
     var factory = this;
