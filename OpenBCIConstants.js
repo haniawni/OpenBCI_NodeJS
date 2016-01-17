@@ -3,7 +3,7 @@
  * Purpose: This file folds all the constants for the
  *     OpenBCI Board
  */
-
+'use strict';
 /** Turning channels off */
 const kOBCIChannelOff_1 = '1';
 const kOBCIChannelOff_2 = '2';

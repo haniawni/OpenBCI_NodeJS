@@ -33,3 +33,6 @@ public
 
 # Test output files
 myOutput.txt
+
+# Local npm builds for testing end in .tgz
+*.tgz
