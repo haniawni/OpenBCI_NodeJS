@@ -4,8 +4,9 @@ var EventEmitter = require('events').EventEmitter;
 var util = require('util');
 var stream = require('stream');
 var serialPort = require('serialport');
-var k = require('./OpenBCIConstants');
-var OpenBCISample = require('./OpenBCISample');
+var openBCISample = require('./openBCISample' || __dirname+ '/../node_modules/openbci-sdk/OpenBCISample');
+var k = require('./openBCIConstants' || __dirname+ '/../node_modules/openbci-sdk/OpenBCIConstants');
+
 
 function OpenBCIFactory() {
     var factory = this;
@@ -142,6 +143,7 @@ function OpenBCIFactory() {
         return new Promise((resolve, reject) => {
             setTimeout(() => {
                 if(!this.connected) reject('no board connected');
+                this.connected = false;
                 this.serial.close(() => {
                     this.isLookingForKeyInBuffer = true;
                     resolve();
@@ -472,9 +474,9 @@ function OpenBCIFactory() {
                 // start simulating
                 this.isSimulating = true;
                 // generateSample is a func that takes the previous sample number
-                var generateSample = OpenBCISample.randomSample(this.numberOfChannels(),this.sampleRate());
+                var generateSample = openBCISample.randomSample(this.numberOfChannels(),this.sampleRate());
 
-                var oldSample = OpenBCISample.newSample();
+                var oldSample = openBCISample.newSample();
                 oldSample.sampleNumber = 0;
                 this.simulator = setInterval(function() {
                     //console.log('Interval...');
@@ -582,12 +584,12 @@ function OpenBCIFactory() {
             while(this.masterBuffer.packetsRead < this.masterBuffer.packetsIn) {
                 var rawPacket = this._bufPacketStripper();
                 //console.log(rawPacket);
-                var newSample = OpenBCISample.convertPacketToSample(rawPacket);
+                var newSample = openBCISample.convertPacketToSample(rawPacket);
                 if(newSample) {
                     newSample._count = this.sampleCount++;
 
                     if(this.isCalculatingImpedance) {
-                        OpenBCISample.impedanceCalculation(newSample).then((updatedSampleObject) => {
+                        openBCISample.impedanceCalculation(newSample).then((updatedSampleObject) => {
                             this.emit('sample', updatedSampleObject);
                         }, (err) => {
                             this.emit('sample', newSample);
@@ -823,7 +825,7 @@ function OpenBCIFactory() {
 
     factory.OpenBCIBoard = OpenBCIBoard;
     factory.OpenBCIConstants = k;
-    factory.OpenBCISample = OpenBCISample;
+    factory.OpenBCISample = openBCISample;
 
 }
 
