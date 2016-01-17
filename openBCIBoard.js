@@ -4,8 +4,13 @@ var EventEmitter = require('events').EventEmitter;
 var util = require('util');
 var stream = require('stream');
 var serialPort = require('serialport');
-var openBCISample = require('./openBCISample' || __dirname+ '/../node_modules/openbci-sdk/openBCISample');
-var k = require('./openBCIConstants' || __dirname+ '/../node_modules/openbci-sdk/openBCIConstants');
+var openBCISample;
+try { // Perform voodoo magic
+    openBCISample = require('./openBCISample');
+} catch (e) {
+    openBCISample = require(__dirname + '/../node_modules/openbci-sdk/openBCISample');
+}
+var k = openBCISample.k;
 
 
 function OpenBCIFactory() {
@@ -478,7 +483,7 @@ function OpenBCIFactory() {
 
                 var oldSample = openBCISample.newSample();
                 oldSample.sampleNumber = 0;
-                this.simulator = setInterval(function() {
+                this.simulator = setInterval(() => {
                     //console.log('Interval...');
                     var newSample = generateSample(oldSample.sampleNumber);
                     //console.log(JSON.stringify(newSample));
