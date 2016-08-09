@@ -1,6 +1,6 @@
 {
-  "name": "openbci-sdk",
-  "version": "0.3.9",
+  "name": "openbci",
+  "version": "1.2.0",
   "description": "The official Node.js SDK for the OpenBCI Biosensor Board.",
   "main": "openBCIBoard",
   "scripts": {
@@ -15,12 +15,13 @@
   "author": "AJ Keller <aj@pushtheworld.us> (www.openbci.com)",
   "license": "MIT",
   "dependencies": {
+    "buffer-equal": "^1.0.0",
     "gaussian": "^1.0.0",
-    "istanbul": "^0.4.2",
+    "mathjs": "^3.3.0",
     "performance-now": "^0.2.0",
-    "scientific-statistics": "^0.2.7",
     "serialport": "3.1.2",
-    "sntp": "^2.0.0"
+    "sntp": "^2.0.0",
+    "streamsearch": "^0.1.2"
   },
   "directories": {
     "test": "test"
@@ -29,6 +30,7 @@
     "chai": "^3.4.1",
     "chai-as-promised": "^5.2.0",
     "codecov": "^1.0.1",
+    "istanbul": "^0.4.4",
     "mocha": "^2.3.4",
     "sandboxed-module": "^2.0.3",
     "sinon": "^1.17.2",
@@ -36,12 +38,12 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/openbci/openbci-js-sdk.git"
+    "url": "git+https://github.com/openbci/openbci_nodejs.git"
   },
   "bugs": {
-    "url": "https://github.com/openbci/openbci-js-sdk/issues"
+    "url": "https://github.com/openbci/openbci_nodejs/issues"
   },
-  "homepage": "https://github.com/openbci/openbci-js-sdk#readme",
+  "homepage": "https://github.com/openbci/openbci_nodejs#readme",
   "engines": {
     "node": ">=4.0.0"
   }
